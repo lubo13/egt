@@ -115,9 +115,9 @@ Provide example request calls in one of the following formats:
 ---
 ## NOTE: The app is not production-ready - build happens on containers init
 
-## RUN Application
+## Clone the repo
 ```bash
-    ./bootstrap.sh
+    git@github.com:lubo13/egt.git
 ```
 
 ## RUN Application
