@@ -1,0 +1,33 @@
+services:
+  gateway_migrator:
+    container_name: gateway_migrator
+    image: golang:1.25
+    working_dir: /gateway
+    volumes:
+      - ./:/gateway:rw
+      - ../proto/gatewaybuf/git.infra.egt.com/clients:/clients:rw
+    networks:
+      - postgres_shared
+    command: ["sh", "-c", "go build -o /usr/bin/migrator /gateway/module/migrations && exec /usr/bin/migrator"]
+
+  gateway_server:
+    container_name: gateway_server
+    image: golang:1.25
+    working_dir: /gateway
+    ports:
+      - "8080:8080"
+      - "8899:8899"
+    volumes:
+      - ./:/gateway:rw
+      - ../proto/gatewaybuf/git.infra.egt.com/clients:/clients:rw
+    networks:
+      - postgres_shared
+    command: ["sh", "-c", "go build -o /usr/bin/server /gateway/module/infrastructure/server && exec /usr/bin/server"]
+
+volumes:
+  gateway_built:
+
+networks:
+  postgres_shared:
+    external: true
+    name: postgres

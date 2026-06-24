@@ -1,0 +1,13 @@
+# Documentation: https://docs.buf.build/configuration/v1/buf-gen-yaml
+version: v1
+managed:
+  enabled: true
+plugins:
+  - plugin: buf.build/protocolbuffers/go:v1.36.11
+    out: git.infra.egt.com/clients/go/report
+    opt:
+      - paths=source_relative
+  - plugin: buf.build/grpc/go:v1.6.0
+    out: git.infra.egt.com/clients/go/report
+    opt:
+      - paths=source_relative

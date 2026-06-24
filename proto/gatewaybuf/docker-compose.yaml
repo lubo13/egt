@@ -1,0 +1,57 @@
+services:
+  # docker compose up buf_dep_update_gateway_proto
+  buf_dep_update_gateway_proto:
+    container_name: buf_dep_update_gateway_proto
+    image: bufbuild/buf:latest
+    restart: no
+    volumes:
+      - ./:/gateway:rw
+    command:
+      - dep
+      - update
+      - /gateway
+
+  # docker compose up buf_format_gateway_proto
+  buf_format_gateway_proto:
+    container_name: buf_format_gateway_proto
+    image: bufbuild/buf:latest
+    restart: no
+    volumes:
+      - ./:/gateway:rw
+    command:
+      - format
+
+  # docker compose up buf_lint_gateway_proto
+  buf_lint_gateway_proto:
+    container_name: buf_lint_gateway_proto
+    image: bufbuild/buf:latest
+    restart: no
+    volumes:
+      - ./:/gateway:rw
+    command:
+      - lint
+      - --config
+      - ./gateway/buf.yaml
+      - --path
+      - gateway
+
+  # docker compose up buf_build_gateway_proto
+  buf_build_gateway_proto:
+    container_name: buf_build_gateway_proto
+    image: bufbuild/buf:latest
+    restart: no
+    working_dir: /gateway
+    volumes:
+      - ./:/gateway:rw
+    command:
+      - generate
+
+  # docker compose up module_init_gateway_proto
+  module_init_gateway_proto:
+    container_name: module_init_gateway_proto
+    image: golang:1.25
+    restart: no
+    working_dir: /gateway
+    volumes:
+      - ./:/gateway:rw
+    command: ["sh", "-c", "cd git.infra.egt.com/clients/go/gateway && go mod init git.infra.egt.com/clients/go/gateway"]

@@ -1,0 +1,57 @@
+services:
+  # docker compose up buf_dep_update_report_proto
+  buf_dep_update_report_proto:
+    container_name: buf_dep_update_report_proto
+    image: bufbuild/buf:latest
+    restart: no
+    volumes:
+      - ./:/report:rw
+    command:
+      - dep
+      - update
+      - /report
+
+  # docker compose up buf_format_report_proto
+  buf_format_report_proto:
+    container_name: buf_format_report_proto
+    image: bufbuild/buf:latest
+    restart: no
+    volumes:
+      - ./:/report:rw
+    command:
+      - format
+
+  # docker compose up buf_lint_report_proto
+  buf_lint_report_proto:
+    container_name: buf_lint_report_proto
+    image: bufbuild/buf:latest
+    restart: no
+    volumes:
+      - ./:/report:rw
+    command:
+      - lint
+      - --config
+      - ./report/buf.yaml
+      - --path
+      - report
+
+  # docker compose up buf_build_report_proto
+  buf_build_report_proto:
+    container_name: buf_build_report_proto
+    image: bufbuild/buf:latest
+    restart: no
+    working_dir: /report
+    volumes:
+      - ./:/report:rw
+    command:
+      - generate
+
+  # docker compose up module_init_report_proto
+  module_init_report_proto:
+    container_name: module_init_report_proto
+    image: golang:1.25
+    restart: no
+    working_dir: /report
+    volumes:
+      - ./:/report:rw
+    command: ["sh", "-c", "cd git.infra.egt.com/clients/go/report && go mod init git.infra.egt.com/clients/go/report"]

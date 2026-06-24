@@ -1,0 +1,49 @@
+services:
+  report_migrator:
+    container_name: report_migrator
+    image: golang:1.25
+    working_dir: /report
+    volumes:
+      - ./:/report:rw
+      - ../proto/gatewaybuf/git.infra.egt.com/clients/go/gateway:/clients/go/gateway:rw
+      - ../proto/reportbuf/git.infra.egt.com/clients/go/report:/clients/go/report:rw
+    networks:
+      - postgres_shared
+    command: ["sh", "-c", "go build -o /usr/bin/migrator /report/module/migrations && exec /usr/bin/migrator"]
+
+  report_consumer:
+    container_name: report_consumer
+    image: golang:1.25
+    working_dir: /report
+    ports:
+      - "8989:8899"
+    volumes:
+      - ./:/report:rw
+      - ../proto/gatewaybuf/git.infra.egt.com/clients/go/gateway:/clients/go/gateway:rw
+      - ../proto/reportbuf/git.infra.egt.com/clients/go/report:/clients/go/report:rw
+    networks:
+      - postgres_shared
+      - kafka_net
+    command: ["sh", "-c", "go build -o /usr/bin/kafka /report/module/infrastructure/kafka && exec /usr/bin/kafka"]
+
+  report_grpc_server:
+    container_name: report_grpc_server
+    image: golang:1.25
+    working_dir: /report
+    ports:
+      - "8988:8899"
+    volumes:
+      - ./:/report:rw
+      - ../proto/gatewaybuf/git.infra.egt.com/clients/go/gateway:/clients/go/gateway:rw
+      - ../proto/reportbuf/git.infra.egt.com/clients/go/report:/clients/go/report:rw
+    networks:
+      - postgres_shared
+    command: ["sh", "-c", "go build -o /usr/bin/server /report/module/infrastructure/server && exec /usr/bin/server"]
+
+networks:
+  postgres_shared:
+    external: true
+    name: postgres
+  kafka_net:
+    external: true
+    name: kafka_net

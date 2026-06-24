@@ -1,0 +1,6 @@
+.DS_Store
+clients
+volumes
+proto/gateway/git.infra.egt.com
+proto/report/git.infra.egt.com
+_README.md

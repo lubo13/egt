@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package report.api.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "git.infra.egt.com/clients/go/report/api/v1;reportapiv1";
+
+// Event structure
+message Event {
+    string id = 1;
+    string device_id = 2;
+    string device_name =3;
+    string sensor_name = 4;
+    string message = 5;
+    google.protobuf.Timestamp created_time = 6;
+}
+
+// Get Event Request structure
+message GetEventRequest {
+    string id = 1;
+}
+
+// Get Event Response structure
+message GetEventResponse {
+    Event event = 1;
+}
+
+// List Event Resquest structure
+message ListEventRequest {
+}
+
+// List Event Response structure
+message ListEventResponse {
+    repeated Event events = 1;
+}
+
+// The DeviceEventService service definition.
+service DeviceEventService {
+    // Get event by id
+    rpc GetEvent(GetEventRequest) returns (GetEventResponse) {}
+    // List events TODO: add pagination
+    rpc ListEvent(ListEventRequest) returns (ListEventResponse) {}
+}

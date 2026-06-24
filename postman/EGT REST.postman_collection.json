@@ -1,0 +1,40 @@
+{
+  "info": {
+    "_postman_id": "e4e650aa-b9f4-4e99-8cd3-9531de5de9c4",
+    "name": "EGT REST",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "11368604"
+  },
+  "item": [
+    {
+      "name": "Device Event",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"id\": \"e02d933c-832d-4e1c-a3c2-afc18e90cb07\",\n    \"device_id\": \"e02d933c-832d-4e1c-a3c2-afc18e90cb07\",\n    \"device_name\": \"Iphone X\",\n    \"sensor_name\": \"front camera\",\n    \"message\": \"picture captured\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/device/event",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "device",
+            "event"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

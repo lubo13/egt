@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package gateway.kafka.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "git.infra.egt.com/clients/go/gateway/kafka/v1;gatewaykafkav1";
+
+// Kafka Event structure
+message Event {
+    string id = 1;
+    string device_id = 2;
+    string device_name = 3;
+    string sensor_name = 4;
+    string message = 5;
+    google.protobuf.Timestamp created_time = 6;
+}

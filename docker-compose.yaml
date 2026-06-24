@@ -1,0 +1,151 @@
+services:
+  # postgres
+  postgres:
+    image: postgres:18.1
+    container_name: postgres
+    command: [ "postgres",
+               "-c", "fsync=0",
+               "-c", "wal_level=logical", "-c", "max_replication_slots=4", "-c", "max_wal_senders=4",
+               "-c", "full_page_writes=off",
+               "-c", "bgwriter_lru_maxpages=0",
+               "-c", "synchronous_commit=off",
+               "-c", "log_statement=all" ]
+    ports:
+      - "5436:5432"
+    networks:
+      - postgres_private
+      - postgres_shared
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+      - POSTGRES_MULTIPLE_DATABASES=gateway,report
+    volumes:
+      - ./volumes/postgres-data:/var/lib/postgresql
+      - ./init_multi_databases.sh:/docker-entrypoint-initdb.d/init_multi_databases.sh
+
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.24.1-p1
+    container_name: pgbouncer
+    networks:
+      - postgres_private
+      - postgres_shared
+    environment:
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - AUTH_TYPE=scram-sha-256
+      - DB_HOST=postgres
+      - POOL_MODE=transaction
+      - ADMIN_USERS=root
+      - LISTEN_PORT=6432
+      - DB_PORT=5432
+    ports:
+      - "6432:6432"
+    depends_on:
+      - postgres
+
+  kafkabroker1:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafkabroker1
+    container_name: kafkabroker1
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_BROKER_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafkabroker1:9093,2@kafkabroker2:9093,3@kafkabroker3:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafkabroker1:9092,CONTROLLER://kafkabroker1:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafkabroker1:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      CLUSTER_ID: 'EmptNWtoR4GGWx-BH6nGLQ'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    volumes:
+      - ./volumes/kafkabroker1/data:/var/lib/kafka/data
+    networks:
+      - kafka_net
+
+  kafkabroker2:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafkabroker2
+    container_name: kafkabroker2
+    ports:
+      - "9094:9092"
+      - "9095:9093"
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_BROKER_ID: 2
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafkabroker1:9093,2@kafkabroker2:9093,3@kafkabroker3:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafkabroker2:9092,CONTROLLER://kafkabroker2:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafkabroker2:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      CLUSTER_ID: 'EmptNWtoR4GGWx-BH6nGLQ'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    volumes:
+      - ./volumes/kafkabroker2/data:/var/lib/kafka/data
+    networks:
+      - kafka_net
+
+  kafkabroker3:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafkabroker3
+    container_name: kafkabroker3
+    ports:
+      - "9096:9092"
+      - "9097:9093"
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_BROKER_ID: 3
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafkabroker1:9093,2@kafkabroker2:9093,3@kafkabroker3:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafkabroker3:9092,CONTROLLER://kafkabroker3:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafkabroker3:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      CLUSTER_ID: 'EmptNWtoR4GGWx-BH6nGLQ'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    volumes:
+      - ./volumes/kafkabroker3/data:/var/lib/kafka/data
+    networks:
+      - kafka_net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-cluster-ui
+    ports:
+      - "8088:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafkabroker1:9092,kafkabroker2:9092,kafkabroker3:9092
+    depends_on:
+      - kafkabroker1
+      - kafkabroker2
+      - kafkabroker3
+    networks:
+      - kafka_net
+
+networks:
+  kafka_net:
+    driver: bridge
+    name: kafka_net
+  postgres_private:
+    external: true
+  postgres_shared:
+    external: true
+    name: postgres

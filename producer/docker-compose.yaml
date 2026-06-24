@@ -1,0 +1,21 @@
+services:
+  producer:
+    container_name: producer
+    image: golang:1.25
+    working_dir: /producer
+    ports:
+      - "8999:8899"
+    volumes:
+      - ./:/producer:rw
+    networks:
+      - postgres_shared
+      - kafka_net
+    command: ["sh", "-c", "go build -o /usr/bin/worker /producer/module/infrastructure/worker/main.go && exec /usr/bin/worker"]
+
+networks:
+  postgres_shared:
+    external: true
+    name: postgres
+  kafka_net:
+    external: true
+    name: kafka_net
