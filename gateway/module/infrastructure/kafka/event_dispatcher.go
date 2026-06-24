@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -15,6 +16,7 @@ import (
 )
 
 const X_IDEMOPOTENT_ID string = "X-Idempotent-Id"
+const CORRELATION_ID string = "Correlation-Id"
 
 type MessageRepositoryInterface interface {
 	Produce(ctx context.Context, topic string, headers []byte, message []byte, createdAt time.Time) error
@@ -64,6 +66,7 @@ func (eventDispatcher *EventDispather) messageMapper(domainEvent *event.DomainEv
 		messageJson := protojson.Format(protoEvent)
 		headers := &map[string]string{
 			X_IDEMOPOTENT_ID: ev.ID.String(),
+			CORRELATION_ID:   uuid.NewString(),
 		}
 		headersJson, _ := json.Marshal(headers)
 

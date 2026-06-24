@@ -12,6 +12,7 @@ import (
 )
 
 const X_IDEMOPOTENT_ID string = "X-Idempotent-Id"
+const CORRELATION_ID string = "Correlation-Id"
 
 type IdempotentIdRepositoryInterface interface {
 	IsExists(ctx context.Context, id *uuid.UUID) (bool, error)
@@ -52,10 +53,21 @@ func (idempotentProcessorDecorator *IdempotentProcessorDecorator) Process(
 ) error {
 	callable := func(ctx context.Context) error {
 		var idempotentId uuid.UUID
+		var corrId string
+		for _, header := range kafkaMessage.Headers {
+			if header.Key == CORRELATION_ID {
+				corrId = string(header.Value)
+			}
+		}
+
 		for _, header := range kafkaMessage.Headers {
 			if header.Key == X_IDEMOPOTENT_ID {
 				if err := uuid.Validate(string(header.Value)); err != nil {
-					idempotentProcessorDecorator.logger.Error("invalid idempotent id", zap.Error(err))
+					idempotentProcessorDecorator.logger.Error(
+						"invalid idempotent id",
+						zap.String("correlation-id", corrId),
+						zap.Error(err),
+					)
 
 					return nil
 				}
@@ -65,30 +77,30 @@ func (idempotentProcessorDecorator *IdempotentProcessorDecorator) Process(
 		}
 
 		if idempotentId == uuid.Nil {
-			idempotentProcessorDecorator.logger.Error("missing idempotent id")
+			idempotentProcessorDecorator.logger.Error("missing idempotent id", zap.String("correlation-id", corrId))
 		}
 
 		isExist, err := idempotentProcessorDecorator.idempotentIdRepository.IsExists(ctx, &idempotentId)
 		if err != nil {
-			idempotentProcessorDecorator.logger.Error("idempotent key checking failed", zap.Error(err))
+			idempotentProcessorDecorator.logger.Error("idempotent key checking failed", zap.String("correlation-id", corrId), zap.Error(err))
 
 			return err
 		}
 		if isExist {
-			idempotentProcessorDecorator.logger.Info(fmt.Sprintf("skip duplicated id -> %s", idempotentId.String()))
+			idempotentProcessorDecorator.logger.Info(fmt.Sprintf("skip duplicated id -> %s", idempotentId.String()), zap.String("correlation-id", corrId))
 
 			return nil
 		}
 
 		err = idempotentProcessorDecorator.messangeProcessor.Process(ctx, kafkaMessage)
 		if err != nil {
-			idempotentProcessorDecorator.logger.Error("processing failed", zap.Error(err))
+			idempotentProcessorDecorator.logger.Error("processing failed", zap.String("correlation-id", corrId), zap.Error(err))
 
 			return err
 		}
 
 		if err := idempotentProcessorDecorator.idempotentIdRepository.Save(ctx, &idempotentId); err != nil {
-			idempotentProcessorDecorator.logger.Error("saving of idempotent id failed", zap.Error(err))
+			idempotentProcessorDecorator.logger.Error("saving of idempotent id failed", zap.String("correlation-id", corrId), zap.Error(err))
 
 			return err
 		}

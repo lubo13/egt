@@ -120,6 +120,11 @@ Provide example request calls in one of the following formats:
     ./bootstrap.sh
 ```
 
+## RUN Application
+```bash
+    ./bootstrap.sh
+```
+
 ## Stop and remove applications volumes and generated ProtoBuf definitions
 ```bash
     ./flush.sh
