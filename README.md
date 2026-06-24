@@ -71,7 +71,7 @@ Provide example request calls in one of the following formats:
   | Go                | 1.23+                       | 1.25                   | ✅   |
   | gRPC              | google.golang.org/grpc      | google.golang.org/grpc | ✅   |
   | Kafka             | Apache Kafka 3.7            | Apache Kafka 3.8       | ✅   |
-  | PostgreSQL        | 16                          | 16                     | ✅   |
+  | PostgreSQL        | 16                          | 18                     | ✅   |
   | Kafka client      | segmentio/kafka-go          | segmentio/kafka-go     | ✅   |
   | PostgreSQL driver | jackc/pgx/v5                | jackc/pgx/v5           | ✅   |
 
