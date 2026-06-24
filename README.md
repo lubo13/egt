@@ -14,7 +14,6 @@ Provide example request calls in one of the following formats:
 
 ### Tech stack
 
-
 | Component         | Version / Library      | ✅   |
 | ----------------- | ---------------------- | --- |
 | Go                | 1.23+                  | ✅   |
